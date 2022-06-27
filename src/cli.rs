@@ -15,6 +15,7 @@ use std::sync::atomic::AtomicBool;
 use std::thread;
 use std::time::Duration;
 use tokio::runtime::Runtime;
+use segment::segment_constructor::load_segment;
 
 #[cfg(feature = "dhat-heap")]
 #[global_allocator]
@@ -25,7 +26,29 @@ static ALLOC: dhat::Alloc = dhat::Alloc;
 struct Args {
     /// Path to the collection
     #[clap(short, long)]
-    pub collection: String,
+    pub collection: Option<String>,
+    /// Path to the segment
+    #[clap(short, long)]
+    pub segment: Option<String>,
+}
+
+fn load_collection(path: &str) -> Result<Collection, String> {
+    let rt = Runtime::new().expect("create runtime");
+    let collection_path = Path::new(path);
+    let collection_name = collection_path
+        .file_name()
+        .expect("Can't resolve a filename of one of the collection files")
+        .to_str()
+        .expect("A filename of one of the collection files is not a valid UTF-8")
+        .to_string();
+    eprintln!("collection_name = {:#?}", collection_name);
+    let mut collection = rt.block_on(Collection::load(
+        collection_name.clone(),
+        &collection_path,
+        Default::default(),
+    ));
+    rt.block_on(collection.before_drop());
+    Ok(collection)
 }
 
 fn main() -> std::io::Result<()> {
@@ -33,26 +56,16 @@ fn main() -> std::io::Result<()> {
     env_logger::init();
     let args: Args = Args::parse();
 
-    let rt = Runtime::new().expect("create runtime");
-
-    let collection_path = Path::new(&args.collection);
-
-    let collection_name = collection_path
-        .file_name()
-        .expect("Can't resolve a filename of one of the collection files")
-        .to_str()
-        .expect("A filename of one of the collection files is not a valid UTF-8")
-        .to_string();
-
+    #[cfg(feature = "dhat-heap")]
+    let _profiler = dhat::Profiler::new_heap();
     {
-        #[cfg(feature = "dhat-heap")]
-        let _profiler = dhat::Profiler::new_heap();
-        {
-            eprintln!("collection_name = {:#?}", collection_name);
+        if let Some(collection_path) = args.collection {
+            let collection = load_collection(&collection_path).unwrap();
+        }
 
-            let mut collection =
-                rt.block_on(Collection::load(collection_name.clone(), &collection_path));
-            rt.block_on(collection.before_drop());
+        if let Some(segment_path) = args.segment {
+            let segment = load_segment(&Path::new(&segment_path)).unwrap();
+            let id_tracker = segment.id_tracker.borrow();
         }
     }
 
