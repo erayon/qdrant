@@ -63,6 +63,6 @@ impl ChunkedVectors {
             chunk_data.resize(idx + self.dim, 0.);
         }
         let data = &mut chunk_data[idx..idx + self.dim];
-        data.clone_from_slice(vector);
+        data.copy_from_slice(vector);
     }
 }

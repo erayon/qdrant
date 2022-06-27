@@ -86,7 +86,7 @@ impl ProxySegment {
         let segment_arc = self.write_segment.get();
         let mut write_segment = segment_arc.write();
 
-        write_segment.upsert_point(op_num, point_id, &vector)?;
+        write_segment.upsert_vector(op_num, point_id, &vector)?;
         write_segment.set_full_payload(op_num, point_id, &payload)?;
 
         Ok(true)
@@ -189,7 +189,7 @@ impl SegmentEntry for ProxySegment {
         Ok(wrapped_result)
     }
 
-    fn upsert_point(
+    fn upsert_vector(
         &mut self,
         op_num: SeqNumberType,
         point_id: PointIdType,
@@ -199,7 +199,7 @@ impl SegmentEntry for ProxySegment {
         self.write_segment
             .get()
             .write()
-            .upsert_point(op_num, point_id, vector)
+            .upsert_vector(op_num, point_id, vector)
     }
 
     fn delete_point(
@@ -528,9 +528,9 @@ mod tests {
         );
 
         let vec4 = vec![1.1, 1.0, 0.0, 1.0];
-        proxy_segment.upsert_point(100, 4.into(), &vec4).unwrap();
+        proxy_segment.upsert_vector(100, 4.into(), &vec4).unwrap();
         let vec6 = vec![1.0, 1.0, 0.5, 1.0];
-        proxy_segment.upsert_point(101, 6.into(), &vec6).unwrap();
+        proxy_segment.upsert_vector(101, 6.into(), &vec6).unwrap();
         proxy_segment.delete_point(102, 1.into()).unwrap();
 
         let query_vector = vec![1.0, 1.0, 1.0, 1.0];

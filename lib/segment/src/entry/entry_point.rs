@@ -136,7 +136,7 @@ pub trait SegmentEntry {
         params: Option<&SearchParams>,
     ) -> OperationResult<Vec<ScoredPoint>>;
 
-    fn upsert_point(
+    fn upsert_vector(
         &mut self,
         op_num: SeqNumberType,
         point_id: PointIdType,
