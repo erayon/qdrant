@@ -10,12 +10,12 @@ use collection::optimizers_builder::OptimizersConfig;
 use collection::shard::Shard;
 use collection::Collection;
 use log::info;
+use segment::segment_constructor::load_segment;
 use std::path::Path;
 use std::sync::atomic::AtomicBool;
 use std::thread;
 use std::time::Duration;
 use tokio::runtime::Runtime;
-use segment::segment_constructor::load_segment;
 
 #[cfg(feature = "dhat-heap")]
 #[global_allocator]
