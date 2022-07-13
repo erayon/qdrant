@@ -47,3 +47,6 @@ num_cpus = "1.13.1"
 tar = "0.4.38"
 fs_extra = "1.2.0"
 
+[[bench]]
+name = "batch_search_bench"
+harness = false
