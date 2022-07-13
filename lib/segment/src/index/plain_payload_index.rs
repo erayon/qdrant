@@ -201,13 +201,16 @@ impl VectorIndex for PlainIndex {
         match filter {
             Some(filter) => {
                 let borrowed_payload_index = self.payload_index.borrow();
-                let filtered_ids_vec: Vec<_> = borrowed_payload_index.query_points(filter).collect();
+                let filtered_ids_vec: Vec<_> =
+                    borrowed_payload_index.query_points(filter).collect();
                 vectors
                     .iter()
                     .map(|vector| {
-                        self.vector_storage
-                            .borrow()
-                            .score_points(vector, &mut filtered_ids_vec.iter().copied(), top)
+                        self.vector_storage.borrow().score_points(
+                            vector,
+                            &mut filtered_ids_vec.iter().copied(),
+                            top,
+                        )
                     })
                     .collect()
             }

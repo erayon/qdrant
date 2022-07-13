@@ -22,6 +22,7 @@ use segment::types::{Filter, PayloadStorageType, PointIdType, ScoredPoint, Segme
 
 use crate::collection_manager::collection_updater::CollectionUpdater;
 use crate::collection_manager::holders::segment_holder::SegmentHolder;
+use crate::collection_manager::segments_searcher::SegmentsSearcher;
 use crate::config::CollectionConfig;
 use crate::operations::types::{CollectionError, CollectionResult, SearchRequestBatch};
 use crate::operations::CollectionUpdateOperations;
@@ -30,7 +31,6 @@ use crate::shard::shard_config::{ShardConfig, SHARD_CONFIG_FILE};
 use crate::update_handler::{Optimizer, UpdateHandler, UpdateSignal};
 use crate::wal::SerdeWal;
 use crate::{CollectionId, ShardId};
-use crate::collection_manager::segments_searcher::SegmentsSearcher;
 
 /// LocalShard
 ///
@@ -487,23 +487,29 @@ impl LocalShard {
         request: Arc<SearchRequestBatch>,
         search_runtime_handle: &Handle,
     ) -> CollectionResult<Vec<Vec<ScoredPoint>>> {
-        let res = SegmentsSearcher::search_batch(self.segments(), request.clone(), search_runtime_handle)
-            .await?;
+        let res =
+            SegmentsSearcher::search_batch(self.segments(), request.clone(), search_runtime_handle)
+                .await?;
         let distance = self.config.read().await.params.distance;
-        let top_results = res.into_iter().map(|vector_res| {
-            let processed_res = vector_res.into_iter().map(|mut scored_point| {
-                scored_point.score = distance.postprocess_score(scored_point.score);
-                scored_point
-            });
+        let top_results = res
+            .into_iter()
+            .map(|vector_res| {
+                let processed_res = vector_res.into_iter().map(|mut scored_point| {
+                    scored_point.score = distance.postprocess_score(scored_point.score);
+                    scored_point
+                });
 
-            if let Some(threshold) = request.score_threshold {
-                processed_res
-                    .take_while(|scored_point| distance.check_threshold(scored_point.score, threshold))
-                    .collect()
-            } else {
-                processed_res.collect()
-            }
-        }).collect();
+                if let Some(threshold) = request.score_threshold {
+                    processed_res
+                        .take_while(|scored_point| {
+                            distance.check_threshold(scored_point.score, threshold)
+                        })
+                        .collect()
+                } else {
+                    processed_res.collect()
+                }
+            })
+            .collect();
         Ok(top_results)
     }
 }

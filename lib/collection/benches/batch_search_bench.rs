@@ -97,17 +97,19 @@ fn batch_search_benchmark(c: &mut Criterion) {
             FieldCondition::new_match("a".to_string(), 3.into()),
         ))),
         Some(Filter::new_must(Condition::Field(
-            FieldCondition::new_range("a".to_string(), Range {
-                lt: None,
-                gt: Some(-1.),
-                gte: None,
-                lte: Some(100.0)
-            }),
-        )))
+            FieldCondition::new_range(
+                "a".to_string(),
+                Range {
+                    lt: None,
+                    gt: Some(-1.),
+                    gte: None,
+                    lte: Some(100.0),
+                },
+            ),
+        ))),
     ];
 
     for (fid, filter) in filters.into_iter().enumerate() {
-
         group.bench_function(format!("search-{fid}"), |b| {
             b.iter(|| {
                 runtime.block_on(async {

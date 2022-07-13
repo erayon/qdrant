@@ -185,9 +185,10 @@ impl HNSWIndex {
         top: usize,
         params: Option<&SearchParams>,
     ) -> Vec<Vec<ScoredPointOffset>> {
-        vectors.iter().map(|vector| {
-            self.search_with_graph(vector, filter, top, params)
-        }).collect()
+        vectors
+            .iter()
+            .map(|vector| self.search_with_graph(vector, filter, top, params))
+            .collect()
     }
 }
 
@@ -216,9 +217,10 @@ impl VectorIndex for HNSWIndex {
                 if query_cardinality.max < self.config.indexing_threshold {
                     // if cardinality is small - use plain index
                     let mut filtered_ids = payload_index.query_points(query_filter);
-                    return vectors.iter().map(|vector| {
-                        vector_storage.score_points(vector, &mut filtered_ids, top)
-                    }).collect();
+                    return vectors
+                        .iter()
+                        .map(|vector| vector_storage.score_points(vector, &mut filtered_ids, top))
+                        .collect();
                 }
 
                 if query_cardinality.min > self.config.indexing_threshold {
@@ -241,9 +243,10 @@ impl VectorIndex for HNSWIndex {
                 } else {
                     // if cardinality is small - use plain index
                     let mut filtered_ids = payload_index.query_points(query_filter);
-                    vectors.iter().map(|vector| {
-                        vector_storage.score_points(vector, &mut filtered_ids, top)
-                    }).collect()
+                    vectors
+                        .iter()
+                        .map(|vector| vector_storage.score_points(vector, &mut filtered_ids, top))
+                        .collect()
                     // vector_storage.score_points(vector, &mut filtered_ids, top)
                 };
             }
