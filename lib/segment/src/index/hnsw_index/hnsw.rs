@@ -219,7 +219,9 @@ impl VectorIndex for HNSWIndex {
                     let filtered_ids: Vec<_> = payload_index.query_points(query_filter).collect();
                     return vectors
                         .iter()
-                        .map(|vector| vector_storage.score_points(vector, &mut filtered_ids.iter(), top))
+                        .map(|vector| {
+                            vector_storage.score_points(vector, &mut filtered_ids.iter(), top)
+                        })
                         .collect();
                 }
 
@@ -245,7 +247,13 @@ impl VectorIndex for HNSWIndex {
                     let filtered_ids: Vec<_> = payload_index.query_points(query_filter).collect();
                     vectors
                         .iter()
-                        .map(|vector| vector_storage.score_points(vector, &mut filtered_ids.iter().copied(), top))
+                        .map(|vector| {
+                            vector_storage.score_points(
+                                vector,
+                                &mut filtered_ids.iter().copied(),
+                                top,
+                            )
+                        })
                         .collect()
                     // vector_storage.score_points(vector, &mut filtered_ids, top)
                 };
