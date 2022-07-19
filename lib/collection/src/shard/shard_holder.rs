@@ -9,11 +9,12 @@ use crate::operations::types::{CollectionError, CollectionResult};
 use crate::operations::{OperationToShard, SplitByShard};
 use crate::shard::local_shard::LocalShard;
 use crate::shard::Shard::Local;
+use crate::save_on_disk::SaveOnDisk;
 use crate::shard::{PeerId, Shard, ShardId, ShardTransfer};
 
 pub struct ShardHolder {
     shards: HashMap<ShardId, Shard>,
-    shard_transfers: HashMap<ShardId, ShardTransfer>,
+    shard_transfers: SaveOnDisk<HashMap<ShardId, ShardTransfer>>,
     temporary_shards: HashMap<ShardId, Shard>,
     ring: HashRing<ShardId>,
 }
@@ -24,7 +25,8 @@ impl ShardHolder {
     pub fn new(hashring: HashRing<ShardId>) -> Self {
         Self {
             shards: HashMap::new(),
-            shard_transfers: HashMap::new(),
+            shard_transfers: SaveOnDisk::load_or_init("shard_transfers")
+                .expect("Failed to load or create shard transfers state file"),
             temporary_shards: HashMap::new(),
             ring: hashring,
         }
@@ -102,16 +104,21 @@ impl ShardHolder {
             to: to_peer,
         };
         self.shard_transfers
+            .write()
             .insert(shard_id, shard_transfer.clone());
         Ok(shard_transfer)
     }
 
     pub fn finish_transfer(&mut self, shard_id: ShardId) -> CollectionResult<()> {
-        let transfer = self.shard_transfers.remove(&shard_id).ok_or_else(|| {
-            CollectionError::service_error(format!(
-                "Shard transfer data for {shard_id} is absent at the end of the transfer."
-            ))
-        })?;
+        let transfer = self
+            .shard_transfers
+            .write()
+            .remove(&shard_id)
+            .ok_or_else(|| {
+                CollectionError::service_error(format!(
+                    "Shard transfer data for {shard_id} is absent at the end of the transfer."
+                ))
+            })?;
         if let Shard::Remote(shard) = self.shards.get_mut(&shard_id).ok_or_else(|| {
             CollectionError::service_error("Shard {shard_id} is absent".to_owned())
         })? {
