@@ -132,6 +132,7 @@ impl ShardHolder {
             ))),
             Some(shard @ Shard::Local(_)) => Ok(shard),
             Some(shard @ Shard::Proxy(_)) => Ok(shard),
+            Some(shard @ Shard::ForwardProxy(_)) => Ok(shard),
         }
     }
 
@@ -188,6 +189,7 @@ impl LockedShardHolder {
             Some(shard) => match &*shard {
                 Shard::Local(_) => Ok(shard),
                 Shard::Proxy(_) => Ok(shard),
+                Shard::ForwardProxy(_) => Ok(shard),
                 Shard::Remote(_) => Err(CollectionError::bad_shard_selection(format!(
                     "Shard {} is not local on peer",
                     id

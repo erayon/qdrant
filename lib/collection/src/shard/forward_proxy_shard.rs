@@ -33,8 +33,7 @@ pub struct ForwardProxyShard {
 }
 
 impl ForwardProxyShard {
-    #[allow(unused)]
-    pub async fn new(wrapped_shard: LocalShard, remote_shard: RemoteShard) -> Self {
+    pub fn new(wrapped_shard: LocalShard, remote_shard: RemoteShard) -> Self {
         Self {
             wrapped_shard,
             remote_shard,
@@ -83,7 +82,7 @@ impl ForwardProxyShard {
         Ok(next_page_offset)
     }
 
-    pub async fn deconstruct(self) -> (LocalShard, RemoteShard) {
+    pub fn deconstruct(self) -> (LocalShard, RemoteShard) {
         (self.wrapped_shard, self.remote_shard)
     }
 
