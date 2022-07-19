@@ -6,6 +6,7 @@ pub mod proxy_shard;
 pub mod remote_shard;
 pub mod shard_config;
 pub mod shard_holder;
+pub mod forward_proxy_shard;
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
