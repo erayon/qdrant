@@ -80,7 +80,7 @@ impl Collection {
         CollectionVersion::save(path)?;
         config.save(path)?;
 
-        let mut shard_holder = ShardHolder::new(HashRing::fair(HASH_RING_SHARD_SCALE));
+        let mut shard_holder = ShardHolder::new(path, HashRing::fair(HASH_RING_SHARD_SCALE));
 
         let shared_config = Arc::new(RwLock::new(config.clone()));
         for shard_id in shard_distribution.local {
@@ -192,7 +192,7 @@ impl Collection {
             log::debug!("Using raw hash ring");
             HashRing::raw()
         };
-        let mut shard_holder = ShardHolder::new(ring);
+        let mut shard_holder = ShardHolder::new(path, ring);
 
         let shard_distribution = CollectionShardDistribution::from_local_state(path)
             .expect("Can't infer shard distribution from local shard configurations");

@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::path::Path;
 
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
@@ -22,10 +23,10 @@ pub struct ShardHolder {
 pub struct LockedShardHolder(pub RwLock<ShardHolder>);
 
 impl ShardHolder {
-    pub fn new(hashring: HashRing<ShardId>) -> Self {
+    pub fn new(collection_path: &Path, hashring: HashRing<ShardId>) -> Self {
         Self {
             shards: HashMap::new(),
-            shard_transfers: SaveOnDisk::load_or_init("shard_transfers")
+            shard_transfers: SaveOnDisk::load_or_init(collection_path.join("shard_transfers"))
                 .expect("Failed to load or create shard transfers state file"),
             temporary_shards: HashMap::new(),
             ring: hashring,
@@ -223,6 +224,7 @@ mod tests {
     #[tokio::test]
     async fn test_shard_holder() {
         let shard_dir = TempDir::new("shard").unwrap();
+        let collection_dir = TempDir::new("collection").unwrap();
 
         let shard = RemoteShard::init(
             2,
@@ -233,7 +235,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut shard_holder = ShardHolder::new(HashRing::fair(100));
+        let mut shard_holder = ShardHolder::new(collection_dir.path(), HashRing::fair(100));
         shard_holder.add_shard(2, Shard::Remote(shard)).await;
         let locked_shard_holder = LockedShardHolder::new(shard_holder);
 
