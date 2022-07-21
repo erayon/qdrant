@@ -8,9 +8,9 @@ use tokio::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use crate::hash_ring::HashRing;
 use crate::operations::types::{CollectionError, CollectionResult};
 use crate::operations::{OperationToShard, SplitByShard};
+use crate::save_on_disk::SaveOnDisk;
 use crate::shard::local_shard::LocalShard;
 use crate::shard::Shard::Local;
-use crate::save_on_disk::SaveOnDisk;
 use crate::shard::{PeerId, Shard, ShardId, ShardTransfer};
 
 pub struct ShardHolder {
