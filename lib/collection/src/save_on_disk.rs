@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 /// Functions as a smart pointer which gives a write guard and saves data on disk
 /// when write guard is dropped.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct SaveOnDisk<T> {
     data: T,
     path: PathBuf,
@@ -78,7 +78,12 @@ impl<'a, T: Serialize> DerefMut for WriteGuard<'a, T> {
 
 impl<'a, T: Serialize> Drop for WriteGuard<'a, T> {
     fn drop(&mut self) {
-        self.save().unwrap();
+        if let Err(err) = self.save() {
+            log::error!(
+                "Failed to save structure on disk at {} with error: {err}",
+                self.0.path.display()
+            )
+        }
     }
 }
 

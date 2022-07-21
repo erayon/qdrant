@@ -24,10 +24,18 @@ pub struct LockedShardHolder(pub RwLock<ShardHolder>);
 
 impl ShardHolder {
     pub fn new(collection_path: &Path, hashring: HashRing<ShardId>) -> Self {
+        let shard_transfers = match SaveOnDisk::load_or_init(
+            collection_path.join("shard_transfers"),
+        ) {
+            Ok(shard_transfers) => shard_transfers,
+            Err(err) => {
+                log::error!("Failed to load or init shard_transfers file: {err}. Using default empty map of transfers.");
+                Default::default()
+            }
+        };
         Self {
             shards: HashMap::new(),
-            shard_transfers: SaveOnDisk::load_or_init(collection_path.join("shard_transfers"))
-                .expect("Failed to load or create shard transfers state file"),
+            shard_transfers,
             temporary_shards: HashMap::new(),
             ring: hashring,
         }
